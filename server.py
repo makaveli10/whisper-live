@@ -16,6 +16,7 @@ import numpy as np
 from websockets.sync import server
 from websockets.sync.server import serve
 from transcriber import WhisperModel
+import matplotlib.pyplot as plt
 
 
 clients = {}
@@ -48,6 +49,12 @@ def recv_audio(websocket):
             clients.pop(websocket)
             logging.info("Connection Closed.")
             break
+        except KeyboardInterrupt:
+            clients[websocket].cleanup()
+            clients.pop(websocket)
+            logging.info("Connection Closed.")
+            break
+
 
 
 class ServeClient:
@@ -85,6 +92,12 @@ class ServeClient:
         self.add_pause_thresh = 3       # add a blank to segment list as a pause(no speech) for 3 seconds
         self.transcript = []
         self.send_last_n_segments = 10
+        self.t_offsets = []
+        self.frame_offsets = []
+        self.absolute_starts = []
+        self.absolute_end = []
+        self.relative_starts = []
+        self.relative_ends = []
 
         # text formatting
         self.wrapper = textwrap.TextWrapper(width=50)
@@ -153,12 +166,18 @@ class ServeClient:
             if self.frames_np[int((self.timestamp_offset - self.frames_offset)*self.RATE):].shape[0] > 25 * self.RATE:
                 duration = self.frames_np.shape[0] / self.RATE
                 self.timestamp_offset = self.frames_offset + duration - 5
-    
+
             samples_take = max(0, (self.timestamp_offset - self.frames_offset)*self.RATE)
             input_bytes = self.frames_np[int(samples_take):].copy()
             duration = input_bytes.shape[0] / self.RATE
             if duration<1.0: 
                 continue
+            self.frame_offsets.append(self.frames_offset)
+            self.t_offsets.append(self.timestamp_offset)
+            self.absolute_starts.append(self.timestamp_offset)
+            self.absolute_end.append(self.timestamp_offset+duration)
+            self.relative_starts.append(self.timestamp_offset - self.frames_offset)
+            self.relative_ends.append(self.timestamp_offset - self.frames_offset + duration)
             try:
                 input_sample = input_bytes.copy()
                 # set previous complete segment as initial prompt
@@ -281,6 +300,20 @@ class ServeClient:
         return last_segment
     
     def cleanup(self):
+        plt.plot(self.t_offsets, label='timestamp_offsets', color='blue')
+        plt.plot(self.frame_offsets, label='frame_offsets', color='red')
+        plt.plot(self.absolute_starts, label='absolute start time', color='green')
+        plt.plot(self.absolute_end, label='absolute end time', color='yellow')
+        plt.plot(self.relative_starts, label='relative_starts', color='cyan')
+        plt.plot(self.relative_ends, label='relative_ends', color='magenta')
+
+        # Add labels and a legend
+        plt.xlabel('No of inferences')
+        plt.ylabel('time(audio duration)')
+        plt.legend()
+
+        # Save the plot to a file (change 'plot.png' to your desired file name and format)
+        plt.savefig('plot.png')
         logging.info("Cleaning up.")
         self.exit = True
         self.transcriber.destroy()
