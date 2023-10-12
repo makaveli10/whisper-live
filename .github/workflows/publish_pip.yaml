@@ -25,7 +25,7 @@ jobs:
     - name: Install FFmpeg
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install ffmpeg portaudiodev-19 wget
+        sudo apt-get -y install ffmpeg portaudio19-dev wget
       shell: bash
 
     - name: Install Client Requirements
