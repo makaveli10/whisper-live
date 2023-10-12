@@ -22,6 +22,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Make setup.sh Executable
+      run: chmod +x setup.sh 
+    
     - name: Install Additional Dependencies
       run: |
         ./setup.sh
