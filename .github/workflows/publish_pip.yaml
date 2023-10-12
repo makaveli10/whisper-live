@@ -21,13 +21,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Make setup.sh Executable
-      run: chmod +x setup.sh 
     
-    - name: Install Additional Dependencies
+    name: Install FFmpeg
       run: |
-        ./setup.sh
+        sudo apt-get -y update
+        sudo apt-get -y install ffmpeg portaudiodev-19 wget
       shell: bash
 
     - name: Install Client Requirements
