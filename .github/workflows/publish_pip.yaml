@@ -9,7 +9,7 @@ jobs:
   publish:
     strategy:
         matrix:
-          python-version: [3.8, 3.9]
+          python-version: 3.9
     
     runs-on: ubuntu-latest
 
@@ -38,6 +38,7 @@ jobs:
 
     - name: Build and Publish Package to TestPyPI
       run: |
+        pip install wheel
         python setup.py sdist bdist_wheel
         twine upload --repository-url https://test.pypi.org/legacy/ dist/*
       env:
