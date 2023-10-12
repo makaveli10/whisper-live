@@ -22,10 +22,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install FFmpeg
+    - name: Set up FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v2
+    
+    - name: Install Additional requirements
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install ffmpeg portaudio19-dev wget
+        sudo apt-get -y install portaudio19-dev wget
       shell: bash
 
     - name: Install Client Requirements
