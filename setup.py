@@ -1,5 +1,6 @@
 import pathlib
 from setuptools import find_packages, setup
+from whisper_live.__version__ import __version__
 
 # The directory containing this file
 HERE = pathlib.Path(__file__).parent
@@ -9,7 +10,7 @@ README = (HERE / "README.md").read_text()
 
 # This call to setup() does all the work
 setup(name="whisper-live",
-      version="0.0.6",
+      version=__version__,
       description="A nearly-live implementation of OpenAI's Whisper.",
       long_description=README,
       long_description_content_type="text/markdown",
