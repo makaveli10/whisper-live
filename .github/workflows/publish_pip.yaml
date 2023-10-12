@@ -9,7 +9,7 @@ jobs:
   publish:
     strategy:
         matrix:
-          python-version: [3.8, 3.9, 3.10]
+          python-version: [3.8, 3.9]
     
     runs-on: ubuntu-latest
 
@@ -27,7 +27,6 @@ jobs:
     
     - name: Install Additional requirements
       run: |
-        sudo apt-get -y update
         sudo apt-get -y install portaudio19-dev wget
       shell: bash
 
