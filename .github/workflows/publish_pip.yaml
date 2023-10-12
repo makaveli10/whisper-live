@@ -1,0 +1,42 @@
+name: Publish Package to TestPyPI
+
+on:
+  push:
+    branches:
+      - pip_package_ci
+
+jobs:
+  publish:
+    strategy:
+        matrix:
+          python-version: [3.8, 3.9, 3.10]
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check Out Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Additional Dependencies
+      run: |
+        ./setup.sh
+      shell: bash
+
+    - name: Install Client Requirements
+      run: pip install -r requirements/client.txt
+
+    - name: Install Server Requirements
+      run: pip install -r requirements/server.txt
+
+    - name: Build and Publish Package to TestPyPI
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+      env:
+        TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
