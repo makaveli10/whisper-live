@@ -33,7 +33,7 @@ jobs:
       run: pip install -r requirements/server.txt
 
     - name: Install Wheel for build 
-      run: pip install wheel
+      run: pip install wheel twine
     
     - name: Build and Publish Package to TestPyPI
       run: |
