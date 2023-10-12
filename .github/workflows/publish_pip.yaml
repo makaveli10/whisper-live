@@ -22,14 +22,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Make setup.sh Executable
-      run: chmod +x setup.sh 
-    
-    - name: Install Additional Dependencies
-      run: |
-        ./setup.sh
-      shell: bash
-
     - name: Install Client Requirements
       run: pip install -r requirements/client.txt
 
