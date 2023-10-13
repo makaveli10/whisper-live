@@ -7,6 +7,10 @@ on:
 
 jobs:
   publish:
+    strategy:
+        matrix:
+          python-version: [3.8, 3.9]
+
     runs-on: ubuntu-latest
 
     steps:
@@ -16,7 +20,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: ${{ matrix.python-version }}
     
     - name: Set up FFmpeg
       uses: FedericoCarboni/setup-ffmpeg@v2
