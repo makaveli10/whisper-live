@@ -4,9 +4,12 @@ on:
   push:
     branches:
       - pip_package_ci
+    tags:
+      - v*
+    
 
 jobs:
-  publish:
+  build-and-push-package:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +41,54 @@ jobs:
     - name: Build and Publish Package to TestPyPI
       run: |
         python setup.py sdist bdist_wheel
-        twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-      env:
-        TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+    name: Publish Package to TestPyPI
+
+on:
+  push:
+    branches:
+      - pip_package_ci
+    tags:
+      - v*
+    
+
+jobs:
+  build-and-push-package:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check Out Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    
+    - name: Set up FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v2
+    
+    - name: Install Additional requirements
+      run: |
+        sudo apt-get -y install portaudio19-dev wget
+      shell: bash
+
+    - name: Install Client Requirements
+      run: pip install -r requirements/client.txt
+
+    - name: Install Server Requirements
+      run: pip install -r requirements/server.txt
+
+    - name: Install Wheel for build 
+      run: pip install wheel twine
+    
+    - name: Build and Publish Package to TestPyPI
+      run: |
+        python setup.py sdist bdist_wheel
+    - name: Push package on Test PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
