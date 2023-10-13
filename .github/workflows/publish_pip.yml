@@ -2,8 +2,6 @@ name: Publish Package to TestPyPI
 
 on:
   push:
-    branches:
-      - pip_package_ci
     tags:
       - v*
     
