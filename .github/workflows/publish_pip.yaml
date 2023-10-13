@@ -38,8 +38,7 @@ jobs:
     - name: Build and Publish Package to TestPyPI
       run: |
         python setup.py sdist bdist_wheel
-        versioned_wheel=$(echo "dist/*cp${{ matrix.python-version }}*")
-        twine upload --repository-url https://test.pypi.org/legacy/ $versioned_wheel
+        twine upload --repository-url https://test.pypi.org/legacy/ dist/*
       env:
         TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
