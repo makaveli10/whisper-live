@@ -42,4 +42,7 @@ setup(name="whisper-live",
         "ffmpeg-python",
         "scipy",
         "websocket-client",
-      ])
+      ],
+      python_requires='>=3.8, <4',  # Specify compatible Python versions
+      platforms=['any']  # Include the Python version in wheel file names
+)
