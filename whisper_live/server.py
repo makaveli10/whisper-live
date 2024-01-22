@@ -382,7 +382,9 @@ class ServeClient:
                     language=self.language,
                     task=self.task,
                     vad_filter=True,
-                    vad_parameters=self.vad_parameters
+                    vad_parameters=self.vad_parameters,
+                    word_timestamps=True,
+                    hallucination_silence_threshold=2,
                 )
 
                 if self.language is None:
@@ -466,6 +468,8 @@ class ServeClient:
         self.current_out = ''
         last_segment = None
         # process complete segments
+        print(segments)
+        print()
         if len(segments) > 1:
             for i, s in enumerate(segments[:-1]):
                 text_ = s.text
