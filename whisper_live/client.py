@@ -52,7 +52,7 @@ class Client:
         self.uid = str(uuid.uuid4())
         self.waiting = False
         self.last_response_received = None
-        self.disconnect_if_no_response_for = 15
+        self.disconnect_if_no_response_for = 10
         self.language = lang
         self.model = model
         self.server_error = False
@@ -63,6 +63,9 @@ class Client:
         self.log_transcription = log_transcription
         self.max_clients = max_clients
         self.max_connection_time = max_connection_time
+        self.avg_server_inference_time = None
+        self.last_server_processed_packet_id = None
+        self.packets = {}
 
         if translate:
             self.task = "translate"
@@ -119,9 +122,7 @@ class Client:
                         float(seg['start']) >= float(self.transcript[-1]['end']))):
                     self.transcript.append(seg)
         # update last received segment and last valid response time
-        if self.last_received_segment is None or self.last_received_segment != segments[-1]["text"]:
-            self.last_response_received = time.time()
-            self.last_received_segment = segments[-1]["text"]
+        self.last_received_segment = segments[-1]["text"]
 
         if self.log_transcription:
             # Truncate to last 3 entries for brevity.
@@ -142,6 +143,7 @@ class Client:
             message (str): The received message from the server.
 
         """
+        current_time = time.time()
         message = json.loads(message)
 
         if self.uid != message.get("uid"):
@@ -172,6 +174,8 @@ class Client:
             return
 
         if "segments" in message.keys():
+            self.last_response_received = current_time
+            self.avg_server_inference_time = message["inference_time"]
             self.process_segments(message["segments"])
 
     def on_error(self, ws, error):
@@ -216,12 +220,16 @@ class Client:
 
         Args:
             message (bytes): The audio data packet in bytes to be sent to the server.
-
         """
         try:
+            packet_id = str(uuid.uuid4())
+            current_time = time.time()
+            self.packets[packet_id] = current_time
+            self.last_server_processed_packet_id = packet_id
+            # self.client_socket.send(json_payload)
             self.client_socket.send(message, websocket.ABNF.OPCODE_BINARY)
         except Exception as e:
-            print(e)
+            print(f"Error sending audio packet: {e}")
 
     def close_websocket(self):
         """
@@ -270,6 +278,9 @@ class Client:
         assert self.last_response_received
         while time.time() - self.last_response_received < self.disconnect_if_no_response_for:
             continue
+            
+        print(f"Latency: {self.last_response_received - self.packets[self.last_server_processed_packet_id]}")
+        print(f"Average server inference time: {self.avg_server_inference_time}")
 
 
 class TranscriptionTeeClient:

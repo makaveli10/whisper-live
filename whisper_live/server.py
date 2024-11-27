@@ -422,6 +422,7 @@ class ServeClientBase(object):
         self.add_pause_thresh = 3       # add a blank to segment list as a pause(no speech) for 3 seconds
         self.transcript = []
         self.send_last_n_segments = 10
+        self.inference_times = []
 
         # text formatting
         self.pick_previous_segments = 2
@@ -550,6 +551,7 @@ class ServeClientBase(object):
                 json.dumps({
                     "uid": self.client_uid,
                     "segments": segments,
+                    "inference_time": sum(self.inference_times) / len(self.inference_times),
                 })
             )
         except Exception as e:
@@ -795,6 +797,7 @@ class ServeClientFasterWhisper(ServeClientBase):
         self.vad_parameters = vad_parameters or {"onset": 0.5}
         self.no_speech_thresh = 0.45
         self.same_output_threshold = 10
+        self.prev_duration = 0.0
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         if device == "cuda":
@@ -897,6 +900,7 @@ class ServeClientFasterWhisper(ServeClientBase):
             depends on the implementation of the `transcriber.transcribe` method but typically
             includes the transcribed text.
         """
+        start = time.perf_counter()
         if ServeClientFasterWhisper.SINGLE_MODEL:
             ServeClientFasterWhisper.SINGLE_MODEL_LOCK.acquire()
         result, info = self.transcriber.transcribe(
@@ -908,6 +912,8 @@ class ServeClientFasterWhisper(ServeClientBase):
             vad_parameters=self.vad_parameters if self.use_vad else None)
         if ServeClientFasterWhisper.SINGLE_MODEL:
             ServeClientFasterWhisper.SINGLE_MODEL_LOCK.release()
+        end = time.perf_counter()
+        self.inference_times.append(end - start)
 
         if self.language is None and info is not None:
             self.set_language(info)
@@ -988,9 +994,10 @@ class ServeClientFasterWhisper(ServeClientBase):
             self.clip_audio_if_no_valid_segment()
 
             input_bytes, duration = self.get_audio_chunk_for_processing()
-            if duration < 1.0:
+            if duration < 1.0 or self.prev_duration == duration:
                 time.sleep(0.1)     # wait for audio chunks to arrive
                 continue
+            self.prev_duration = duration
             try:
                 input_sample = input_bytes.copy()
                 result = self.transcribe_audio(input_sample)
