@@ -103,7 +103,7 @@ jobs:
     needs: [run-tests, check-code-format]
     timeout-minutes: 60
     runs-on: ubuntu-22.04
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/fix_deprecated_package_name' || startsWith(github.ref, 'refs/tags/'))
     steps:
       - uses: actions/checkout@v2
 
@@ -135,7 +135,7 @@ jobs:
     needs: [run-tests, check-code-format, build-and-push-docker-cpu]
     timeout-minutes: 20
     runs-on: ubuntu-22.04
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/fix_deprecated_package_name' || startsWith(github.ref, 'refs/tags/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     steps:
       - uses: actions/checkout@v2
 
