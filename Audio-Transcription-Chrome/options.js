@@ -139,13 +139,16 @@ async function startRecord(option) {
       }
 
       if (data["message"] === "DISCONNECT"){
-        chrome.runtime.sendMessage({ action: "toggleCaptureButtons", data: false })        
+        chrome.runtime.sendMessage({ action: "toggleCaptureButtons", data: false, saveCaptions: option.saveCaptions });        
         return;
       }
 
       res = await sendMessageToTab(option.currentTabId, {
         type: "transcript",
-        data: event.data,
+        data: {
+          data: event.data,
+          saveCaptions: option.saveCaptions,
+        },
       });
     };
 
