@@ -3,6 +3,8 @@
 <h2 align="center">
   <a href="https://www.youtube.com/watch?v=0PHWCApIcCI"><img
 src="https://img.youtube.com/vi/0PHWCApIcCI/0.jpg" style="background-color:rgba(0,0,0,0);" height=300 alt="WhisperLive"></a>
+  <a href="https://www.youtube.com/watch?v=0f5oiG4oPWQ"><img
+  src="https://img.youtube.com/vi/0f5oiG4oPWQ/0.jpg" style="background-color:rgba(0,0,0,0);" height=300 alt="WhisperLive"></a>
   <br><br>A nearly-live implementation of OpenAI's Whisper.
 <br><br>
 </h2>
@@ -18,6 +20,7 @@ input from microphone and pre-recorded audio files.
 - [Browser Extensions](#browser-extensions)
 - [Whisper Live Server in Docker](#whisper-live-server-in-docker)
 - [Future Work](#future-work)
+- [Blog Posts](#blog-posts)
 - [Contact](#contact)
 - [Citations](#citations)
 
@@ -42,12 +45,17 @@ The server supports 3 backends `faster_whisper`, `tensorrt` and `openvino`. If r
 - [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) backend
 ```bash
 python3 run_server.py --port 9090 \
-                      --backend faster_whisper
+                      --backend faster_whisper \
+                      --max_clients 4 \
+                      --max_connection_time 600
   
-# running with custom model
+# running with custom model and cache_dir to save auto-converted ctranslate2 models
 python3 run_server.py --port 9090 \
                       --backend faster_whisper \
-                      -fw "/path/to/custom/faster/whisper/model"
+                      --max_clients 4 \
+                      --max_connection_time 600 \
+                      -fw "/path/to/custom/faster/whisper/model" \
+                      -c ~/.cache/whisper-live/
 ```
 
 - TensorRT backend. Currently, we recommend to only use the docker setup for TensorRT. Follow [TensorRT_whisper readme](https://github.com/collabora/WhisperLive/blob/main/TensorRT_whisper.md) which works as expected. Make sure to build your TensorRT Engines before running the server with TensorRT backend.
@@ -55,15 +63,20 @@ python3 run_server.py --port 9090 \
 # Run English only model
 python3 run_server.py -p 9090 \
                       -b tensorrt \
-                      -trt /home/TensorRT-LLM/examples/whisper/whisper_small_en
+                      -trt /home/TensorRT-LLM/examples/whisper/whisper_small_en \
+                      --max_clients 4 \
+                      --max_connection_time 600
 
 # Run Multilingual model
 python3 run_server.py -p 9090 \
                       -b tensorrt \
                       -trt /home/TensorRT-LLM/examples/whisper/whisper_small \
-                      -m
+                      -m \
+                      --max_clients 4 \
+                      --max_connection_time 600
 ```
-
+- Use `--max_clients` option to restrict the number of clients the server should allow. Defaults to 4.
+- Use `--max_connection_time` options to limit connection time for a client in seconds. Defaults to 600.
 - WhisperLive now supports the [OpenVINO](https://github.com/openvinotoolkit/openvino) backend for efficient inference on Intel CPUs, iGPU and dGPUs. Currently, we tested the models uploaded to [huggingface by OpenVINO](https://huggingface.co/OpenVINO?search_models=whisper).
   - > **Docker Recommended:** Running WhisperLive with OpenVINO inside Docker automatically enables GPU support (iGPU/dGPU) without requiring additional host setup.
   - > **Native (non-Docker) Use:** If you prefer running outside Docker, ensure the Intel drivers and OpenVINO runtime are installed and properly configured on your system. Refer to the documentation for [installing OpenVINO](https://docs.openvino.ai/2025/get-started/install-openvino.html?PACKAGE=OPENVINO_BASE&VERSION=v_2025_0_0&OP_SYSTEM=LINUX&DISTRIBUTION=PIP#).
@@ -97,8 +110,6 @@ If you don't want this, set `--no_single_model`.
   - `use_vad`: Whether to use `Voice Activity Detection` on the server.
   - `save_output_recording`: Set to True to save the microphone input as a `.wav` file during live transcription. This option is helpful for recording sessions for later playback or analysis. Defaults to `False`. 
   - `output_recording_filename`: Specifies the `.wav` file path where the microphone input will be saved if `save_output_recording` is set to `True`.
-  - `max_clients`: Specifies the maximum number of clients the server should allow. Defaults to 4.
-  - `max_connection_time`: Maximum connection time for each client in seconds. Defaults to 600.
   - `mute_audio_playback`: Whether to mute audio playback when transcribing an audio file. Defaults to False.
 
 ```python
@@ -112,8 +123,6 @@ client = TranscriptionClient(
   use_vad=False,
   save_output_recording=True,                         # Only used for microphone input, False by Default
   output_recording_filename="./output_recording.wav", # Only used for microphone input
-  max_clients=4,
-  max_connection_time=600,
   mute_audio_playback=False,                          # Only used for file input, False by Default
 )
 ```
@@ -143,6 +152,12 @@ client(hls_url="http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_1xtra/b
 - Run the server with your desired backend as shown [here](https://github.com/collabora/WhisperLive?tab=readme-ov-file#running-the-server).
 - Transcribe audio directly from your browser using our Chrome or Firefox extensions. Refer to [Audio-Transcription-Chrome](https://github.com/collabora/whisper-live/tree/main/Audio-Transcription-Chrome#readme) and https://github.com/collabora/WhisperLive/blob/main/TensorRT_whisper.md
 
+## iOS Client
+
+Use WhisperLive on iOS with our native iOS client.  
+Refer to [`ios-client`](https://github.com/collabora/WhisperLive/tree/main/Audio-Transcription-iOS) and [`ios-client/README.md`](https://github.com/collabora/WhisperLive/blob/main/Audio-Transcription-iOS/README.md) for setup and usage instructions.
+
+
 ## Whisper Live Server in Docker
 - GPU
   - Faster-Whisper
@@ -153,7 +168,7 @@ client(hls_url="http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_1xtra/b
   - TensorRT. Refer to [TensorRT_whisper readme](https://github.com/collabora/WhisperLive/blob/main/TensorRT_whisper.md) for setup and more tensorrt backend configurations.
   ```bash
   docker build . -f docker/Dockerfile.tensorrt -t whisperlive-tensorrt
-  docker run -p 9090:9090 --runtime=nvidia --gpus all --entrypoint /bin/bash -it whisperlive-tensorrt
+  docker run -p 9090:9090 --runtime=nvidia --entrypoint /bin/bash -it whisperlive-tensorrt
 
   # Build small.en engine
   bash build_whisper_tensorrt.sh /app/TensorRT-LLM-examples small.en        # float16
@@ -182,9 +197,15 @@ client(hls_url="http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_1xtra/b
 ## Future Work
 - [ ] Add translation to other languages on top of transcription.
 
+## Blog Posts
+- [Transforming speech technology with WhisperLive](https://www.collabora.com/news-and-blog/blog/2024/05/28/transforming-speech-technology-with-whisperlive/)
+- [WhisperFusion: Ultra-low latency conversations with an AI chatbot](https://www.collabora.com/news-and-blog/news-and-events/whisperfusion-ultra-low-latency-conversations-with-an-ai-chatbot.html) powered by WhisperLive
+- [Breaking language barriers 2.0: Moving closer towards fully reliable, production-ready Hindi ASR](https://www.collabora.com/news-and-blog/news-and-events/breaking-language-barriers-20-moving-closer-production-ready-hindi-asr.html) which is used in WhisperLive for hindi.
+
 ## Contact
 
 We are available to help you with both Open Source and proprietary AI projects. You can reach us via the Collabora website or [vineet.suryan@collabora.com](mailto:vineet.suryan@collabora.com) and [marcus.edel@collabora.com](mailto:marcus.edel@collabora.com).
+
 
 ## Citations
 ```bibtex
