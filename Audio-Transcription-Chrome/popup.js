@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const startButton = document.getElementById("startCapture");
   const stopButton = document.getElementById("stopCapture");
 
-  const useServerCheckbox = document.getElementById("useServerCheckbox");
   const useVadCheckbox = document.getElementById("useVadCheckbox");
   const saveCaptionsCheckbox = document.getElementById("saveCaptionsCheckbox");
   const languageDropdown = document.getElementById('languageDropdown');
@@ -25,13 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
       toggleCaptureButtons(true);
     } else {
       toggleCaptureButtons(false);
-    }
-  });
-
-  // Retrieve checkbox state from storage on popup open
-  chrome.storage.local.get("useServerState", ({ useServerState }) => {
-    if (useServerState !== undefined) {
-      useServerCheckbox.checked = useServerState;
     }
   });
 
@@ -86,13 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentTab = await getCurrentTab();
 
     // Send a message to the background script to start capturing
-    let host = "localhost";
-    let port = "9090";
-    const useCollaboraServer = useServerCheckbox.checked;
-    if (useCollaboraServer){
-      host = "transcription.kurg.org"
-      port = "7090"
-    }
+    const host = "localhost";
+    const port = "9090";
 
     chrome.runtime.sendMessage(
       { 
@@ -148,7 +135,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function toggleCaptureButtons(isCapturing) {
     startButton.disabled = isCapturing;
     stopButton.disabled = !isCapturing;
-    useServerCheckbox.disabled = isCapturing;
     useVadCheckbox.disabled = isCapturing;
     saveCaptionsCheckbox.disabled = isCapturing;
     modelSizeDropdown.disabled = isCapturing;
@@ -158,12 +144,6 @@ document.addEventListener("DOMContentLoaded", function () {
     startButton.classList.toggle("disabled", isCapturing);
     stopButton.classList.toggle("disabled", !isCapturing);
   }
-
-  // Save the checkbox state when it's toggled
-  useServerCheckbox.addEventListener("change", () => {
-    const useServerState = useServerCheckbox.checked;
-    chrome.storage.local.set({ useServerState });
-  });
 
   useVadCheckbox.addEventListener("change", () => {
     const useVadState = useVadCheckbox.checked;

@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function() {
   const startButton = document.getElementById("startCapture");
   const stopButton = document.getElementById("stopCapture");
 
-  const useServerCheckbox = document.getElementById("useServerCheckbox");
   const useVadCheckbox = document.getElementById("useVadCheckbox");
   const saveCaptionCheckbox = document.getElementById("saveCaptionCheckbox");
   const languageDropdown = document.getElementById('languageDropdown');
@@ -32,12 +31,6 @@ document.addEventListener("DOMContentLoaded", function() {
       startButton.disabled = false;
     });
   
-  browser.storage.local.get("useServerState", ({ useServerState }) => {
-    if (useServerState !== undefined) {
-      useServerCheckbox.checked = useServerState;
-    }
-  });
-
   browser.storage.local.get("useVadState", ({ useVadState }) => {
     if (useVadState !== undefined) {
       useVadCheckbox.checked = useVadState;
@@ -79,14 +72,8 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   startButton.addEventListener("click", function() {
-    let host = "localhost";
-    let port = "9090";
-    const useCollaboraServer = useServerCheckbox.checked;
-
-    if (useCollaboraServer){
-      host = "transcription.kurg.org"
-      port = "7090"
-    }
+    const host = "localhost";
+    const port = "9090";
 
     browser.tabs.query({ active: true, currentWindow: true })
       .then(function(tabs) {
@@ -140,7 +127,6 @@ document.addEventListener("DOMContentLoaded", function() {
   function toggleCaptureButtons(isCapturing) {
     startButton.disabled = isCapturing;
     stopButton.disabled = !isCapturing;
-    useServerCheckbox.disabled = isCapturing;
     useVadCheckbox.disabled = isCapturing;
     saveCaptionCheckbox.disabled = isCapturing;
     modelSizeDropdown.disabled = isCapturing;
@@ -150,12 +136,6 @@ document.addEventListener("DOMContentLoaded", function() {
     startButton.classList.toggle("disabled", isCapturing);
     stopButton.classList.toggle("disabled", !isCapturing);
   }
-
-  // Save the checkbox state when it's toggled
-  useServerCheckbox.addEventListener("change", () => {
-    const useServerState = useServerCheckbox.checked;
-    browser.storage.local.set({ useServerState });
-  });
 
   useVadCheckbox.addEventListener("change", () => {
     const useVadState = useVadCheckbox.checked;
